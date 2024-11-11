@@ -47,8 +47,7 @@ let experiment_configuration_function = (writer) => { return {
 
         t.do_print_task = () => {
             writer.clear_stage();
-            console.log(t.treatment_combination[0].value)
-            if(t.treatment_combination[0].value=="indented")
+            if(t.treatment_combination[0]=="indented")
                 writer.print_html_on_stage("indented");
             else
                 writer.print_html_on_stage("non-indented");
