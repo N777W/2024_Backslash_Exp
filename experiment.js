@@ -1,14 +1,12 @@
 let SEED = "666";
 Nof1.SET_SEED(SEED);
 
-// Constants and variables used throughout the experiment with limited word pool
 const wordPool = [
-    "a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
-    "k", "l", "m", "n", "o", "p", "q", "r", "s", "t",
-    "u", "v", "w", "x", "y", "z", "aa", "bb", "cc", "dd",
-    "ee", "ff", "gg", "hh", "ii", "jj", "kk", "ll", "mm", "nn"
+    "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r",
+    "s", "t", "u", "v", "w", "x", "y", "z", "aa", "bb", "cc", "dd", "ee", "ff", "gg", "hh",
+    "ii", "jj", "kk", "ll", "mm", "nn", "oo", "pp", "qq", "rr", "ss", "tt", "uu", "vv",
+    "ww", "xx", "yy", "zz"
 ];
-const targetAttribute = "X"; // Setting a short target value as well
 
 let experiment_configuration_function = (writer) => {
     return {
@@ -16,7 +14,7 @@ let experiment_configuration_function = (writer) => {
         seed: SEED,
 
         introduction_pages: writer.stage_string_pages_commands([
-            writer.convert_string_to_html_string("Welcome to the JSON Indentation Experiment! Find the deepest path to the target value.")
+            writer.convert_string_to_html_string("Welcome to the JSON Deepest Object Experiment! Find the path to the deepest JSON object.")
         ]),
 
         pre_run_training_instructions: writer.string_page_command(
@@ -24,7 +22,7 @@ let experiment_configuration_function = (writer) => {
         ),
 
         pre_run_experiment_instructions: writer.string_page_command(
-            writer.convert_string_to_html_string("The experiment is starting. In each task, identify the correct path to the target value in the JSON object.\n\n")
+            writer.convert_string_to_html_string("The experiment is starting. In each task, identify the path to the deepest JSON object.")
         ),
 
         finish_pages: [
@@ -37,56 +35,46 @@ let experiment_configuration_function = (writer) => {
             { variable: "Indentation", treatments: ["indented", "nonindented"] }
         ],
 
-        repetitions: 2, // Adjust as needed for the number of test cases
+        repetitions: 2,
 
         measurement: Nof1.Time_to_finish(Nof1.text_input_experiment),
 
         task_configuration: (t) => {
-            const isIndented = t.treatment_combination[0] === "indented";
-            const maxDepth = 3; // Adjust for complexity
-            const maxFields = 3;
+            const isIndented = true;
+            const maxDepth = 5;
+            const maxFields = 6;
 
-            // Generate a new JSON object and determine the correct path for this task
-            const { jsonObject, correctPath } = generateRandomJSON(maxDepth, maxFields);
+            const { jsonObject, deepestPath } = generateComplexRandomJSON(maxDepth, maxFields);
 
-            // Log the correct path to the console for debugging purposes
-            console.log("Correct Path:", correctPath);
+            console.log("Deepest Path:", deepestPath);
 
             t.do_print_task = () => {
                 writer.clear_stage();
 
-                // Display JSON with or without indentation
-                if (isIndented) {
-                    writer.print_html_on_stage(
-                        `<pre>${highlightTargetValue(JSON.stringify(jsonObject, null, 4))}</pre>`
-                    );
-                } else {
-                    writer.print_html_on_stage(
-                        `<pre>${highlightTargetValue(formatJSONVertical(jsonObject))}</pre>`
-                    );
-                }
+                const jsonDisplay = isIndented
+                    ? JSON.stringify(jsonObject, null, 4)
+                    : formatJSONVertical(jsonObject);
 
-                // Display message asking for the path
+                writer.print_html_on_stage(
+                    `<pre>${jsonDisplay}</pre>`
+                );
+
                 writer.print_string_on_stage(writer.convert_string_to_html_string(
-                    "Please identify the correct path to the target value."
+                    "Please identify the path to the deepest JSON object."
                 ));
             };
 
-            // Set the expected answer as the correct path for validation
-            t.expected_answer = correctPath;
+            t.expected_answer = "Skip";
 
-            // Function to check if the user's answer is correct
             t.accepts_answer_function = (given_answer) => {
                 return given_answer === t.expected_answer;
             };
 
-            // Display error message if the path entered is incorrect
             t.do_print_error_message = (given_answer) => {
                 writer.clear_error();
-                writer.print_html_on_error(`<h1>Incorrect path: ${given_answer}</h1>`);
+                writer.print_html_on_error(`<h1>Incorrect path: ${given_answer}. Try again.</h1>`);
             };
 
-            // Display message after the user answers correctly
             t.do_print_after_task_information = () => {
                 writer.clear_error();
                 writer.print_string_on_stage(writer.convert_string_to_html_string(
@@ -100,52 +88,45 @@ let experiment_configuration_function = (writer) => {
 Nof1.BROWSER_EXPERIMENT(experiment_configuration_function);
 
 // Utility functions
-function generateRandomJSON(maxDepth = 3, maxFields = 3) {
+function generateComplexRandomJSON(maxDepth = 6, maxFields = 8) {
     const jsonObject = {};
-    let uniqueKeys = new Set();
-    let possiblePaths = [];
-    let correctPath = "";
+    let deepestPath = [];
+    let currentNode = jsonObject;
+    const uniqueKeys = new Set();
 
-    function addNestedObject(obj, currentDepth, path) {
-        if (currentDepth > maxDepth) return;
+    for (let depth = 0; depth < maxDepth; depth++) {
+        const key = getRandomKey(uniqueKeys);
+        currentNode[key] = depth === maxDepth - 1 ? {} : { attr: `RandomValue` };
+        deepestPath.push(key);
+        currentNode = currentNode[key];
+    }
 
-        const numFields = Math.min(maxFields, wordPool.length - uniqueKeys.size);
-        let addedFields = 0;
+    addRandomBranches(jsonObject, maxDepth, maxFields, uniqueKeys);
 
-        while (addedFields < numFields) {
-            const key = getRandomKey(uniqueKeys);
-            uniqueKeys.add(key);
-            addedFields++;
+    return { jsonObject, deepestPath: deepestPath.join(".") };
+}
 
-            if (currentDepth < maxDepth && Math.random() > 0.3) {
-                obj[key] = {};
-                addNestedObject(obj[key], currentDepth + 1, [...path, key]);
-            } else {
-                obj[key] = getRandomValue(uniqueKeys);
-                possiblePaths.push([...path, key]);
+function addRandomBranches(obj, maxDepth, maxFields, uniqueKeys) {
+    if (maxDepth <= 1) return;
+
+    const numBranches = Math.floor(Math.random() * maxFields) + 1;
+    for (let i = 0; i < numBranches; i++) {
+        const key = getRandomKey(uniqueKeys);
+        obj[key] = { attr: "side_value" };
+
+        const branchDepth = Math.min(maxDepth, 2 + Math.floor(Math.random() * (maxDepth - 2)));
+        let currentNode = obj[key];
+
+        for (let depth = 1; depth < branchDepth; depth++) {
+            const nestedKey = getRandomKey(uniqueKeys);
+            currentNode[nestedKey] = depth === branchDepth - 1 ? {} : { attr: `branch_value${depth}` };
+            currentNode = currentNode[nestedKey];
+
+            if (Math.random() > 0.6) {
+                addRandomBranches(currentNode, branchDepth - depth, maxFields, uniqueKeys);
             }
         }
     }
-
-    addNestedObject(jsonObject, 1, []);
-    correctPath = setRandomTargetAttribute(jsonObject, possiblePaths, targetAttribute);
-    return { jsonObject, correctPath };
-}
-
-function setRandomTargetAttribute(jsonObject, possiblePaths, targetAttribute) {
-    if (possiblePaths.length > 0) {
-        const randomPath = possiblePaths[Math.floor(Math.random() * possiblePaths.length)];
-        const correctPath = randomPath.join(".");
-
-        let current = jsonObject;
-        for (let i = 0; i < randomPath.length - 1; i++) {
-            current = current[randomPath[i]];
-        }
-        current[randomPath[randomPath.length - 1]] = targetAttribute;
-        return correctPath;
-    }
-    console.error("Error: No valid paths found to set as correct path.");
-    return "";
 }
 
 function getRandomKey(usedKeys) {
@@ -153,23 +134,10 @@ function getRandomKey(usedKeys) {
     do {
         key = wordPool[Math.floor(Math.random() * wordPool.length)];
     } while (usedKeys.has(key));
+    usedKeys.add(key);
     return key;
 }
 
-function getRandomValue(usedKeys) {
-    let value;
-    do {
-        value = wordPool[Math.floor(Math.random() * wordPool.length)];
-    } while (usedKeys.has(value));
-    return value;
-}
-
-function highlightTargetValue(jsonString) {
-    const targetValueRegex = new RegExp(`"${targetAttribute}"`, 'g');
-    return jsonString.replace(targetValueRegex, `<span style="color: red;">"${targetAttribute}"</span>`);
-}
-
 function formatJSONVertical(obj) {
-    const lines = JSON.stringify(obj, null, 4).split('\n');
-    return lines.map(line => line.trim()).join('\n');
+    return JSON.stringify(obj).replace(/,/g, ',\n');
 }
