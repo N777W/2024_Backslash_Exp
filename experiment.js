@@ -39,8 +39,10 @@ let experiment_configuration_function = (writer) => {
 
         measurement: Nof1.Time_to_finish(Nof1.text_input_experiment),
 
+
+
         task_configuration: (t) => {
-            const isIndented = true;
+            const isIndented = t.treatment_value("Indentation")=="indented";
             const maxDepth = 5;
             const maxFields = 6;
 
