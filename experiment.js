@@ -4,18 +4,15 @@ Nof1.SET_SEED(SEED);
 function generateComplexBackslashTask() {
     function createAnnoyingString(length) {
         const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        const backslashSequences = ["\\n", "\\t", "\\\\", "\\b", "\\r"]; // Common escaped sequences
+        const backslashSequences = ["\\n", "\\t", "\\\\", "\\b", "\\r"];
         let result = [];
 
         for (let i = 0; i < length; i++) {
             if (Math.random() < 0.3) {
-                // 30% chance of adding a backslash sequence
                 result.push(backslashSequences[Math.floor(Math.random() * backslashSequences.length)]);
             } else if (Math.random() < 0.2) {
-                // 20% chance of adding a single backslash
                 result.push("\\");
             } else {
-                // Otherwise, add a random character
                 result.push(chars.charAt(Math.floor(Math.random() * chars.length)));
             }
         }
@@ -31,7 +28,6 @@ function generateComplexBackslashTask() {
 }
 
 function applyColorToTask(taskString) {
-    // Replace each backslash with a colored version using HTML <span>
     return taskString.replace(/\\/g, '<span style="color: red;">\\</span>');
 }
 
