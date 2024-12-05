@@ -79,7 +79,7 @@ let experiment_configuration_function = (writer) => {
         layout: [
             { variable: "Appearance", treatments: ["plain", "colored"] } // Add "plain" and "colored" treatments
         ],
-        repetitions: 1, // Repeat the experiment for each treatment
+        repetitions: 10, // Repeat the experiment for each treatment
         measurement: Nof1.Time_to_finish(Nof1.text_input_experiment),
         task_configuration: (t) => {
             const task = generateComplexBackslashTask(); // Generate a new task for each repetition
