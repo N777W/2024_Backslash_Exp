@@ -51,7 +51,7 @@ let experiment_configuration_function = (writer) => {
         pre_run_training_instructions: writer.string_page_command(
             writer.convert_string_to_html_string(
                 "- Example Task:\n" +
-                "- Given the string: a\\\\nbcd\\\\e\\\\\\\\fghijk\\\\tlmno\\\\r\\\\pq\\\\rs\\\\tuvw\\\\xy\\\\z\\\\n1234\\\\5\n" +
+                "- Given the string:  a\\nbcd\\e\\\\fghijk\\tlmno\\r\\pq\\rs\\tuvw\\xy\\z\\n1234\\5\n" +
                 "- Breakdown of backslashes:\n" +
                 "  - \\\\\ → 2 backslashes\n" +
                 "  - \\n → 1 backslash\n" +
